@@ -11,9 +11,10 @@ const WeatherApi=()=> {
     const [description,setDescription]=useState({})
    
 
-    axios.get(`${api.base}weather?q=soul&units=metric&APPID=${api.key}`)
+    axios.get(`${api.base}weather?q=yangon&units=metric&APPID=${api.key}`)
     .then(res=>{
         console.log(res)
+        setDescription(res.data.weather[0].description)
         // console.log(res.json())
         // setDescription(res.json().weather[0].description)
     })

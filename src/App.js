@@ -6,8 +6,11 @@ import * as dat from 'dat.gui'
 import ReactDOM from "react-dom"
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-// import  color from '../public/Rock030_1'
-// import {TextureLoader}  from 'three/src/loaders/TextureLoader'
+import CANNON from 'cannon'
+//import vertexShader from './components/shader/vertex.glsl'
+//import fragmentShader from './components/shader/fragment.glsl'
+// import WeatherApi from './components/api.js' dr ka pyan htae ya ml
+
 
 
 
@@ -19,48 +22,140 @@ class App extends Component {
 
         // scene
         const scene = new THREE.Scene()
-        scene.background = new THREE.Color(0xdcd0ff)
-        scene.fog = new THREE.Fog(0xdcd0ff, 1, 16)
+       //  scene.background = new THREE.Color(0xdcd0ff)
+         //scene.fog = new THREE.Fog(0xdcd0ff, 1, 16)
 
+        // physics
+     const world = new CANNON.World()
+world.broadphase = new CANNON.SAPBroadphase(world)
+world.allowSleep = true
+world.gravity.set(0, -9.8, 0)
+
+        const defaultMaterial = new CANNON.Material('default')
+const defaultContactMaterail = new CANNON.ContactMaterial(
+    defaultMaterial,
+    defaultMaterial, {
+        friction: 0.1,
+        restitution: 0.4,
+    })
+world.addContactMaterial(defaultContactMaterail)
+world.defaultContactMaterial = defaultContactMaterail
+
+        
+
+
+
+
+//physicsGround
+
+const planeShape=new CANNON.Plane()
+const planeBody=new CANNON.Body({
+mass:0,
+shape:planeShape,
+})
+planeBody.quaternion.setFromAxisAngle(
+    new CANNON.Vec3(-1, 0, 0),
+    Math.PI / 2
+)
+
+world.addBody(planeBody)
+
+
+
+       
+
+       
+
+       
 
         // loaders
         const loader = new GLTFLoader();
 
         // texture
         const textureLoader = new THREE.TextureLoader()
-        const colorTexture = textureLoader.load('Color.jpg')
+        const snowTextre=textureLoader.load('disc.png')
+        const colorTexture = textureLoader.load('Rock030_1K_Color.png')
         colorTexture.encoding = THREE.sRGBEncoding
 
         const grassTexture = textureLoader.load('grass4.jpg')
         grassTexture.wrapS = THREE.RepeatWrapping
-        grassTexture.wrapT = grassTexture.wrapS
+        grassTexture.wrapT = grassTexture.wrapS     
         grassTexture.repeat.set(10000, 10000)
         grassTexture.anisotropy = 16
         grassTexture.encoding = THREE.sRGBEncoding
+     
+     
+      // rain
+       
+        const rainCount=30
+       
+        const positionArray=new Float32Array(rainCount*3)
+        const scaleArray=new Float32Array(rainCount*1)
+      
+       
+           
+        for(let i=0;i<rainCount;i++){
+            positionArray[i * 3] =3*Math.random()
+            positionArray[i * 3 + 1] =2
+            positionArray[i * 3 + 2] = Math.random()
+            scaleArray[i]=Math.random()
+        }
+        
+        
+         const Shape = new CANNON.Particle(1)
+        const Body = new CANNON.Body({
+            mass: 1,
+            shape: Shape,
+            material: defaultMaterial
+        })
+        Body.position.copy(new THREE.BufferAttribute(positionArray,3))
+        world.addBody(Body)
+        
+
+        const rainGeo=new THREE.BufferGeometry()
+
+        const rainMaterial=new THREE.PointsMaterial({
+          size: 1,
+            sizeAttenuation:true,
+            map:snowTextre,
+            alphaTest:0.5,
+            transparent:true,
+          
+          
+        })
+       
+        rainMaterial.color.set(0xffffff)
+        rainGeo.setAttribute('position', new THREE.BufferAttribute(positionArray, 3))
+        rainGeo.setAttribute('aScale', new THREE.BufferAttribute(scaleArray, 1))
+        const rains=new THREE.Points(rainGeo,rainMaterial)
+     
+        scene.add(rains)
+    
+    
 
 
 
         // model
-        const textmaterial = new THREE.MeshBasicMaterial({
-            color: 0xffffff ,  
-        })
+    //     const textmaterial = new THREE.MeshBasicMaterial({
+    //         color: 0xffffff ,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+    //     })
 
-        // I don't know these only affect wireframe on 3d object 
-        const tineMaterial = new THREE.MeshStandardMaterial({
-            color:0x123456,
-            metalness:1,
-            roughness:0.3,
-            wireframe:true,
-            side:THREE.DoubleSide,
-        })
-        const steelMaterial = new THREE.MeshStandardMaterial({
-            color: 0x00ff00,
-            roughness: 0.5,
-            // wireframe: true,
-       side: THREE.DoubleSide,
-            metalness: 1,
+    //     // I don't know these only affect wireframe on 3d object 
+    //     const tineMaterial = new THREE.MeshStandardMaterial({
+    //         color:0x123456,
+    //         metalness:1,
+    //         roughness:0.3,
+    //         wireframe:true,
+    //         side:THREE.DoubleSide,
+    //     })
+    //     const steelMaterial = new THREE.MeshStandardMaterial({
+    //         color: 0x00ff00,
+    //         roughness: 0.5,
+    //         // wireframe: true,
+    //    side: THREE.DoubleSide,
+    //         metalness: 1,
        
-        })
+    //     })
 // above is problem
 
         const stoneMaterial = new THREE.MeshBasicMaterial({
@@ -72,8 +167,8 @@ class App extends Component {
         loader.load('stone-final(1).glb', (glTF) => {
 
             // // stone
-            // const stone = glTF.scene.children.find(child => child.name === 'Cube')
-            // stone.material = stoneMaterial
+            const stone = glTF.scene.children.find(child => child.name === 'Cube')
+            stone.material = stoneMaterial
 
             // // tine
             // const tine = glTF.scene.children.find(child => child.name === 'Cube001')
@@ -105,7 +200,7 @@ class App extends Component {
             // const text6 = glTF.scene.children.find(child => child.name === 'Text006')
             // text6.material = textmaterial
 
-            console.log(glTF.scene)
+            // console.log(glTF.scene)
             glTF.scene.scale.set(.25, .25, .25)
             glTF.scene.position.set(1.2, 0, 0)
               
@@ -128,7 +223,7 @@ class App extends Component {
             color: 0xff0000,
         }
 
-        const ambient = new THREE.AmbientLight( 0xff0000,2 );
+        const ambient = new THREE.AmbientLight( 0xffffff,1 );
         scene.add( ambient );
 
         const pointLight = new THREE.PointLight( 0xfafd0f, 1,10 );
@@ -152,6 +247,7 @@ class App extends Component {
 
 
         // camera
+       
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
         camera.position.set(0, 2, 2.3)
         scene.add(camera)
@@ -161,7 +257,7 @@ class App extends Component {
         // const directionLightHelper = new THREE.PointLightHelper(pointLight, 1)
         // scene.add(directionLightHelper)
         const axesHelper = new THREE.AxesHelper(5)
-        scene.add(axesHelper)
+         scene.add(axesHelper)
         
         
         // plate
@@ -197,13 +293,20 @@ class App extends Component {
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
         })
 
-        console.log(scene)
+    
 
         // animation
         const clock = new THREE.Clock()
+        let previciousTime=0
         const animate = () => {
 
             const elapsedTime = clock.getElapsedTime()
+            const delta=elapsedTime-previciousTime
+            previciousTime=elapsedTime
+            
+            //console.log(Body.position)
+ world.step(1 / 60, delta, 3)
+            rains.position.copy(Body.position)
 
             controls.update()
 
@@ -216,7 +319,11 @@ class App extends Component {
 
     render() {
        return(
-                    <div ref = { ref => (this.mount = ref) } > </div>
+           <div>
+   <div ref = { ref => (this.mount = ref) } > </div>
+
+           </div>
+                 
                 )
     }
 

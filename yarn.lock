@@ -3202,6 +3202,11 @@
   "resolved" "https://registry.npmjs.org/cannon-es/-/cannon-es-0.18.0.tgz"
   "version" "0.18.0"
 
+"cannon@^0.6.2":
+  "integrity" "sha1-HnvHLdWEGYLzwQTCvFeL+k+xxXI="
+  "resolved" "https://registry.npmjs.org/cannon/-/cannon-0.6.2.tgz"
+  "version" "0.6.2"
+
 "capture-exit@^2.0.0":
   "integrity" "sha512-PiT/hQmTonHhl/HFGN+Lx3JJUznrVYJ3+AQsnthneZbvW7x+f08Tk7yLJTLEOUvBTbduLeeBkxEaYXUOUrRq6g=="
   "resolved" "https://registry.npmjs.org/capture-exit/-/capture-exit-2.0.0.tgz"
